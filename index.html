@@ -18,57 +18,25 @@
   @keyframes r{to{transform:rotate(360deg)}}
   a.btn{display:inline-block;margin-top:6px;padding:14px 22px;background:#f2c14e;color:#0d0f16;
         border-radius:12px;text-decoration:none;font-weight:800;font-size:16px}
-  .err{color:#ff8f8f;font-size:14px;line-height:1.8}
-  code{background:#1a1f2b;padding:2px 6px;border-radius:6px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap" id="w">
   <div class="spin"></div>
-  <div class="t">操作卓につないでいます…</div>
-  <div class="s">今のPCの住所を調べています</div>
+  <div class="t">開いています…</div>
+  <div class="s">切り替わらない時は下を押してください</div>
+  <a class="btn" id="go" href="https://ai-radio-door.vercel.app/">操作卓をひらく</a>
 </div>
 <script>
-// 変わらない入口。今のトンネルの住所は url.txt にPC側が書き込む。
-// 合言葉はこのページのURLの「#」以降から取る（#はサーバに送られないので、公開リポジトリに残らない）。
-var OWNER = "exally-zeroact", REPO = "studio-door";
-var W = document.getElementById("w");
-
-function show(html){ W.innerHTML = html; }
-
-function fail(msg, detail){
-  show('<div class="t">つながりませんでした</div>'
-     + '<div class="err">' + msg + '</div>'
-     + (detail ? '<div class="s">' + detail + '</div>' : '')
-     + '<a class="btn" href="javascript:location.reload()">もう一回ためす</a>');
-}
-
-function go(base){
-  base = (base || "").trim().replace(/\/+$/, "");
-  if (!/^https?:\/\//.test(base)) { return fail("住所が読めませんでした。", "url.txt の中身: <code>" + base + "</code>"); }
-  var k = (location.hash || "").replace(/^#/, "");
-  var dest = base + "/" + (k ? "?k=" + encodeURIComponent(k) : "");
-  show('<div class="spin"></div><div class="t">開いています…</div>'
-     + '<div class="s">切り替わらない時は下を押してください</div>'
-     + '<a class="btn" href="' + dest + '">操作卓をひらく</a>');
-  location.replace(dest);
-}
-
-// キャッシュに古い住所を掴まされないよう、APIを先に叩く（毎回できたてを返す）。
-var bust = "_=" + Date.now();
-fetch("https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/url.txt?ref=main&" + bust,
-      { headers: { "Accept": "application/vnd.github.raw" }, cache: "no-store" })
-  .then(function(r){ if(!r.ok) throw new Error("api " + r.status); return r.text(); })
-  .catch(function(){
-    return fetch("https://raw.githubusercontent.com/" + OWNER + "/" + REPO + "/main/url.txt?" + bust,
-                 { cache: "no-store" }).then(function(r){
-      if(!r.ok) throw new Error("raw " + r.status); return r.text(); });
-  })
-  .then(go)
-  .catch(function(e){
-    fail("PCの住所を取ってこられませんでした。",
-         "PCの電源が入っているか、ネットに繋がっているか確認してください。（" + e.message + "）");
-  });
+// ★2026-09-04 作り替え★
+//   前は「使い捨てトンネルの住所(url.txt)」へ飛ばしていた。飛んだ先が端末に残るので、
+//   PCが再起動するたびアイコンが死んだ(3回やった)。
+//   今は ★変わらない入口(中継)★ へ飛ばすだけ。使い捨ての住所はもう誰にも見せない。
+var DOOR = "https://ai-radio-door.vercel.app/";
+var k = (location.hash || "").replace(/^#/, "");
+var dest = DOOR + (k ? "?k=" + encodeURIComponent(k) : "");
+document.getElementById("go").href = dest;
+location.replace(dest);
 </script>
 </body>
 </html>
